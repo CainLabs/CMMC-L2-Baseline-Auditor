@@ -1,0 +1,21 @@
+name: PowerShell Script Analyzer
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check out repository
+      uses: actions/checkout@v4
+
+    - name: Run PSScriptAnalyzer
+      shell: pwsh
+      run: |
+        Install-Module -Name PSScriptAnalyzer -Force -Confirm:$false
+        Invoke-ScriptAnalyzer -Path './CMMC-L2-Baseline-Auditor.ps1' -EnableExit
