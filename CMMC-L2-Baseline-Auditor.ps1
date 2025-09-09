@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
     Audits a local Windows system against key CMMC 2.0 Level 2 controls.
-
+    
 .DESCRIPTION
     This script performs a read-only audit of a system's configuration against a subset of
     technical controls derived from NIST SP 800-171. It generates a compliance report
