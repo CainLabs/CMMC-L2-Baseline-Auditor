@@ -1,21 +1,16 @@
 <#
 .SYNOPSIS
     Audits a local Windows system against key CMMC 2.0 Level 2 controls.
-    
 .DESCRIPTION
     This script performs a read-only audit of a system's configuration against a subset of
     technical controls derived from NIST SP 800-171. It generates a compliance report
     in either HTML or CSV format.
-
 .PARAMETER ReportPath
     The full file path where the compliance report will be saved.
-
 .PARAMETER Format
     The desired report format. Valid options are HTML or CSV. Defaults to HTML.
-
 .EXAMPLE
     .\CMMC-L2-Baseline-Auditor.ps1 -ReportPath "C:\CMMC-Audits\report.html" -Verbose
-
 .EXAMPLE
     .\CMMC-L2-Baseline-Auditor.ps1 -ReportPath "C:\CMMC-Audits\report.csv" -Format CSV
 #>
@@ -23,7 +18,6 @@
 param(
     [Parameter(Mandatory=$true)]
     [string]$ReportPath,
-
     [Parameter(Mandatory=$false)]
     [ValidateSet('HTML', 'CSV')]
     [string]$Format = 'HTML'
