@@ -38,7 +38,7 @@ To run the script, open a PowerShell console with administrative privileges, nav
 
 ## Sample HTML Report
 
-
+![Sample CMMC HTML Report](https://github.com/CainLabs/CMMC-L2-Baseline-Auditor/blob/main/assets/sample_html_report.png?raw=true)
 
 ## Disclaimer
 
