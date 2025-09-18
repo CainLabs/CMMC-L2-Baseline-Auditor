@@ -225,6 +225,25 @@ $AuditResults += [pscustomobject]@{
 
 # --- Report Generation ---
 
+# Ensure the report directory exists
+try {
+    $ReportDirectory = Split-Path -Path $ReportPath -Parent
+    if (-not (Test-Path -Path $ReportDirectory)) {
+        Write-Verbose "Creating report directory: $ReportDirectory"
+        New-Item -Path $ReportDirectory -ItemType Directory -ErrorAction Stop | Out-Null
+    }
+}
+catch {
+    Write-Error "Failed to create report directory. Error: $($_.Exception.Message)"
+    return # Exit script if directory cannot be created
+}
+
+if ($Format -eq 'CSV') {
+    # ... (rest of the CSV generation code) ...
+} else { # Default to HTML
+    # ... (rest of the HTML generation code) ...
+}
+
 if ($Format -eq 'CSV') {
     try {
         $AuditResults | Export-Csv -Path $ReportPath -NoTypeInformation -Encoding UTF8 -ErrorAction Stop
