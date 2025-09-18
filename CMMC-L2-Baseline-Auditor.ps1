@@ -73,13 +73,26 @@ $AuditResults += [pscustomobject]@{
 
 # --- Identification & Authentication (IA) ---
 
-# Get the local password and lockout policies
-$secPolicy = (net accounts)
+# Export the local security policy to a temporary file for reliable parsing
+secedit /export /cfg "$($env:TEMP)\secpol.inf" | Out-Null
+$secPolicy = Get-Content -Path "$($env:TEMP)\secpol.inf"
+Remove-Item -Path "$($env:TEMP)\secpol.inf" -Force
+
+# Helper function to parse the policy file
+function Get-PolicyValue {
+    param ($Policy, $SettingName)
+    try {
+        return ($Policy | Select-String -Pattern $SettingName).ToString().Split("=")[1].Trim()
+    }
+    catch {
+        return $null
+    }
+}
 
 # Check 3: Password Complexity (Control 3.5.7)
-$complexityEnabled = ($secPolicy | Select-String -Pattern "Password complexity requirements" -Context 0,1).Context.PostContext -match "Enabled"
-$currentSetting = if ($complexityEnabled) { "Enabled" } else { "Disabled" }
-$status = if ($complexityEnabled) { "PASS" } else { "FAIL" }
+$complexityValue = Get-PolicyValue -Policy $secPolicy -SettingName "PasswordComplexity"
+$currentSetting = if ($complexityValue -eq 1) { "Enabled" } else { "Disabled" }
+$status = if ($currentSetting -eq "Enabled") { "PASS" } else { "FAIL" }
 
 $AuditResults += [pscustomobject]@{
     ControlFamily    = "Identification & Authentication"
@@ -91,8 +104,8 @@ $AuditResults += [pscustomobject]@{
 }
 
 # Check 4: Password History (Control 3.5.7)
-$historyLength = (($secPolicy | Select-String -Pattern "Password history length").ToString() -split ":")[-1].Trim()
-$currentSetting = if ($historyLength -eq "None") { 0 } else { [int]$historyLength }
+$historyLength = Get-PolicyValue -Policy $secPolicy -SettingName "PasswordHistorySize"
+$currentSetting = if ($null -ne $historyLength) { [int]$historyLength } else { 0 }
 $status = if ($currentSetting -ge 24) { "PASS" } else { "FAIL" }
 
 $AuditResults += [pscustomobject]@{
@@ -105,8 +118,8 @@ $AuditResults += [pscustomobject]@{
 }
 
 # Check 5: Minimum Password Length (Control 3.5.7)
-$minLength = (($secPolicy | Select-String -Pattern "Minimum password length").ToString() -split ":")[-1].Trim()
-$currentSetting = [int]$minLength
+$minLength = Get-PolicyValue -Policy $secPolicy -SettingName "MinimumPasswordLength"
+$currentSetting = if ($null -ne $minLength) { [int]$minLength } else { 0 }
 $status = if ($currentSetting -ge 14) { "PASS" } else { "FAIL" }
 
 $AuditResults += [pscustomobject]@{
@@ -119,22 +132,22 @@ $AuditResults += [pscustomobject]@{
 }
 
 # Check 6: Account Lockout Threshold (Control 3.5.8)
-$lockoutThreshold = (($secPolicy | Select-String -Pattern "Lockout threshold").ToString() -split ":")[-1].Trim()
-$currentSetting = if ($lockoutThreshold -eq "Never") { "Disabled" } else { [int]$lockoutThreshold }
-$status = if ($lockoutThreshold -ne "Never" -and [int]$lockoutThreshold -le 10) { "PASS" } else { "FAIL" }
+$lockoutThreshold = Get-PolicyValue -Policy $secPolicy -SettingName "LockoutBadCount"
+$currentSetting = if ($null -ne $lockoutThreshold) { [int]$lockoutThreshold } else { 0 }
+$status = if ($currentSetting -gt 0 -and $currentSetting -le 10) { "PASS" } else { "FAIL" }
 
 $AuditResults += [pscustomobject]@{
     ControlFamily    = "Identification & Authentication"
     ControlID        = "3.5.8"
     Description      = "Account lockout threshold is 10 or less"
     CurrentSetting   = $currentSetting
-    CompliantSetting = "10 or less (but not disabled)"
+    CompliantSetting = "10 or less (but not 0)"
     Status           = $status
 }
 
 # Check 7: Account Lockout Duration (Control 3.5.8)
-$lockoutDuration = (($secPolicy | Select-String -Pattern "Lockout duration").ToString() -split ":")[-1].Trim()
-$currentSetting = [int]$lockoutDuration
+$lockoutDuration = Get-PolicyValue -Policy $secPolicy -SettingName "LockoutDuration"
+$currentSetting = if ($null -ne $lockoutDuration) { [int]$lockoutDuration } else { 0 }
 $status = if ($currentSetting -ge 15) { "PASS" } else { "FAIL" }
 
 $AuditResults += [pscustomobject]@{
