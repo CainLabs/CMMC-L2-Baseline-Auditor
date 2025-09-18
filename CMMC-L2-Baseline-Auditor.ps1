@@ -225,7 +225,7 @@ $AuditResults += [pscustomobject]@{
 
 # --- Report Generation ---
 
-# Ensure the report directory exists
+# Ensure the report directory exists before attempting to write the file
 try {
     $ReportDirectory = Split-Path -Path $ReportPath -Parent
     if (-not (Test-Path -Path $ReportDirectory)) {
@@ -236,12 +236,6 @@ try {
 catch {
     Write-Error "Failed to create report directory. Error: $($_.Exception.Message)"
     return # Exit script if directory cannot be created
-}
-
-if ($Format -eq 'CSV') {
-    # ... (rest of the CSV generation code) ...
-} else { # Default to HTML
-    # ... (rest of the HTML generation code) ...
 }
 
 if ($Format -eq 'CSV') {
@@ -279,7 +273,7 @@ if ($Format -eq 'CSV') {
     }
 
     try {
-        $AuditResults | ConvertTo-Html -Head $head -Body $htmlBody | Out-File $ReportPath -ErrorAction Stop
+        ConvertTo-Html -Head $head -Body "<table><tr><th>Control Family</th><th>Control ID</th><th>Description</th><th>Current Setting</th><th>Compliant Setting</th><th>Status</th></tr>$htmlBody</table>" | Out-File $ReportPath -ErrorAction Stop
         Write-Verbose "HTML report successfully generated at: $ReportPath"
     }
     catch {
