@@ -158,6 +158,33 @@ $AuditResults += [pscustomobject]@{
     CompliantSetting = "15 minutes or more"
     Status           = $status
 }
+# Check 6: Account Lockout Threshold (Control 3.5.8)
+$lockoutThreshold = Get-PolicyValue -Policy $secPolicy -SettingName "LockoutBadCount"
+$currentSetting = if ($null -ne $lockoutThreshold) { [int]$lockoutThreshold } else { 0 }
+$status = if ($currentSetting -gt 0 -and $currentSetting -le 10) { "PASS" } else { "FAIL" }
+
+$AuditResults += [pscustomobject]@{
+    ControlFamily    = "Identification & Authentication"
+    ControlID        = "3.5.8"
+    Description      = "Account lockout threshold is 10 or less"
+    CurrentSetting   = $currentSetting
+    CompliantSetting = "10 or less (but not 0)"
+    Status           = $status
+}
+
+# Check 7: Account Lockout Duration (Control 3.5.8)
+$lockoutDuration = Get-PolicyValue -Policy $secPolicy -SettingName "LockoutDuration"
+$currentSetting = if ($null -ne $lockoutDuration) { [int]$lockoutDuration } else { 0 }
+$status = if ($currentSetting -ge 15) { "PASS" } else { "FAIL" }
+
+$AuditResults += [pscustomobject]@{
+    ControlFamily    = "Identification & Authentication"
+    ControlID        = "3.5.8"
+    Description      = "Account lockout duration is 15 minutes or more"
+    CurrentSetting   = "$($currentSetting) minutes"
+    CompliantSetting = "15 minutes or more"
+    Status           = $status
+}
 
 # --- Audit & Accountability (AU) ---
 
